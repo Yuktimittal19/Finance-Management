@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veyon Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-screen w-screen relative overflow-hidden">
+    
+    <!-- Custom Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 flex flex-col gap-3 z-50"></div>
+
+    <div class="flex h-full w-full p-4 gap-4 relative z-10 overflow-hidden bg-black/10">
+        
+        <nav class="w-20 h-full glass-panel flex flex-col items-center py-8 gap-6 rounded-3xl shrink-0">
+            <div class="w-12 h-12 bg-gradient-to-tr from-[#00f0ff] to-[#0044ff] rounded-2xl shadow-lg flex items-center justify-center text-white font-bold text-xl mb-4 transition-transform hover:rotate-12 cursor-pointer shrink-0 border-t border-white/40">V</div>
+            <button onclick="switchTab('tasks')" class="nav-btn active" id="btn-tasks"><span class="material-symbols-rounded">task_alt</span></button>
+            <button onclick="switchTab('finance')" class="nav-btn" id="btn-finance"><span class="material-symbols-rounded">account_balance_wallet</span></button>
+            <button onclick="switchTab('ai')" class="nav-btn" id="btn-ai"><span class="material-symbols-rounded">smart_toy</span></button>
+        </nav>
+
+        <main class="flex-1 h-full relative overflow-hidden">
+            
+            <!-- TASKS TAB -->
+            <section id="tasks" class="tab-content active h-full w-full glass-panel rounded-3xl p-6 flex-col overflow-hidden">
+                <h1 class="text-3xl font-bold mb-4 tracking-tight shrink-0 text-white">Tasks</h1>
+                <div class="flex gap-6 h-full overflow-hidden">
+                    <div class="flex-1 flex flex-col gap-4 overflow-hidden">
+                        <div class="glass-card p-4 flex flex-wrap gap-3 items-center shrink-0">
+                            <input type="text" id="task-desc" placeholder="E.g., Design API" class="glass-input flex-1 p-2.5 rounded-lg">
+                            <!-- New: Team Delegation Dropdown -->
+                            <select id="task-assignee" class="glass-input p-2.5 rounded-lg w-28">
+                                <option value="Me">Me</option>
+                                <option value="Team A">Team A</option>
+                                <option value="Team B">Team B</option>
+                            </select>
+                            <input type="date" id="task-date" class="glass-input p-2.5 rounded-lg w-32">
+                            <select id="task-prio" class="glass-input p-2.5 rounded-lg w-24">
+                                <option value="1">High</option>
+                                <option value="2">Medium</option>
+                                <option value="3" selected>Low</option>
+                            </select>
+                            <button onclick="addTask()" class="btn-primary px-6 py-2.5 rounded-lg shrink-0">Add</button>
+                        </div>
+                        <div id="task-list" class="glass-card flex-1 p-4 overflow-y-auto flex flex-col gap-2 min-h-0">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                    <div class="w-1/3 glass-card p-4 flex flex-col items-center justify-center shrink-0">
+                        <div class="relative w-full h-full min-h-0 flex items-center justify-center">
+                            <canvas id="taskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FINANCE TAB -->
+            <section id="finance" class="tab-content h-full w-full glass-panel rounded-3xl p-6 flex-col overflow-hidden">
+                <div class="flex justify-between items-end mb-4 shrink-0">
+                    <h1 class="text-3xl font-bold tracking-tight text-white">Finance Tracker</h1>
+                    <div class="flex gap-4">
+                        <!-- New: Export CSV Button -->
+                        <button onclick="exportCSV()" class="glass-button px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium">
+                            <span class="material-symbols-rounded text-lg">download</span> Export Ledger
+                        </button>
+                        <div class="flex items-center gap-2 bg-black/40 p-2 rounded-lg border border-white/20 backdrop-blur-md transition-transform hover:scale-105 shadow-lg">
+                            <span class="text-sm opacity-70">Goal: ₹</span>
+                            <input type="number" id="fund-goal" value="10000" class="glass-input bg-transparent border-none w-24 text-right p-1 font-bold">
+                            <button onclick="updateGoal()" class="glass-button p-1 rounded hover:bg-white/20"><span class="material-symbols-rounded text-sm">save</span></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-6 h-full overflow-hidden">
+                    <div class="w-1/3 flex flex-col gap-4 overflow-hidden h-full">
+                        <div class="glass-card p-4 text-center shrink-0">
+                            <h2 class="text-sm font-semibold opacity-70 mb-1">Total Spent</h2>
+                            <p id="total-spent-display" class="text-4xl font-bold text-[#00f0ff] transition-all">₹0</p>
+                        </div>
+                        <div class="glass-card p-4 flex flex-col gap-3 shrink-0">
+                            <input type="number" id="exp-amt" placeholder="Amount (₹)" class="glass-input p-2 rounded-lg">
+                            <input type="text" id="exp-cat" placeholder="Category" class="glass-input p-2 rounded-lg">
+                            <button onclick="addExpense()" class="btn-primary py-2 rounded-lg w-full font-bold">Log Expense</button>
+                        </div>
+                        <div id="expense-list" class="glass-card p-4 flex-1 overflow-y-auto flex flex-col gap-2 min-h-0">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 glass-card p-6 flex flex-col overflow-hidden">
+                        <div class="flex-1 relative w-full h-full min-h-0">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI TAB -->
+            <section id="ai" class="tab-content h-full w-full glass-panel rounded-3xl p-6 flex-col overflow-hidden">
+                <h1 class="text-3xl font-bold mb-4 tracking-tight shrink-0 text-white">Veyon AI</h1>
+                
+                <div id="chat-history" class="flex-1 glass-card mb-4 p-6 overflow-y-auto flex flex-col gap-4 bg-black/30 scroll-smooth pr-2 min-h-0">
+                    <!-- Dynamic chat goes here -->
+                </div>
+                
+                <div id="ai-loading" class="hidden pl-6 mb-4 shrink-0">
+                    <div class="self-start bg-black/60 border border-white/20 rounded-2xl rounded-tl-none p-4 w-16 typing-dots flex justify-center shadow-lg">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                <div class="glass-card rounded-full p-2 flex items-center gap-3 pl-6 bg-black/50 border-white/30 shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                    <input id="chat-input" type="text" placeholder="Message or talk to Veyon..." class="flex-1 bg-transparent outline-none text-lg text-white">
+                    <!-- New: Voice Input Mic Button -->
+                    <button id="mic-btn" onclick="startVoiceInput()" class="glass-button w-12 h-12 rounded-full flex items-center justify-center transition">
+                        <span class="material-symbols-rounded">mic</span>
+                    </button>
+                    <button id="send-btn" onclick="sendChatMessage()" class="btn-primary w-12 h-12 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,168,255,0.6)] transition shrink-0">
+                        <span class="material-symbols-rounded">send</span>
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
